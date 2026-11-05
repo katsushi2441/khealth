@@ -2,9 +2,9 @@
 
 食べ方・睡眠・運動と、健診の数値（ALT・腹囲・BMI・HbA1c）を都道府県と二次医療圏ごとに、
 健診のあとの保健指導の実施率を市町村と保険者ごとに、身近な料理1人前の栄養を、公的データだけで並べるデータ作り。
-画面は国会トラッカーのサイトの中（xb4g/giin の lib/health_pages.php）。
+画面は scripts/build_site.py が作る静的な HTML（out/health/）で、exbridge.jp/health/ に FTPS で置く（国会議員の発言ログ xb4g とは別の製品）。
 
-- 公開: https://xb4g.com/giin/health/ （話題 /health/<話題>・保健指導 /health/kenshin・料理 /health/food）
+- 公開: https://exbridge.jp/health/ （話題 /health/<話題>/・保健指導 /health/kenshin/・保険者 /health/kenshin/<保険者番号>/・料理 /health/food/<料理>/）
 - しないこと: 医療の助言・診断、因果の主張（地域の差は相関まで）、保険者や自治体の良し悪しの判定。
 
 ## データ
@@ -25,16 +25,19 @@
 
 ```bash
 cd /home/kojima/work/khealth
-.venv/bin/python scripts/build_ndb.py --copy
-.venv/bin/python scripts/build_kenshin.py --copy
-.venv/bin/python scripts/build_food.py --copy
-cd ../xb4g/giin && /usr/bin/python3 scripts/make_ogp_health.py
+.venv/bin/python scripts/build_ndb.py
+.venv/bin/python scripts/build_kenshin.py
+.venv/bin/python scripts/build_food.py
+/usr/bin/python3 scripts/make_ogp.py      # out/health/og/*.png（ページごとのカード22枚）
+/usr/bin/python3 scripts/build_site.py    # out/health/（約3,400ページ・sitemap.xml・llms.txt）
 set -a; . /home/kojima/work/aixec/.env; set +a
-/usr/bin/python3 scripts/deploy.py --only lib/health_pages.php data/health $(ls img/og/health*.png)
+/usr/bin/python3 scripts/deploy.py --changed   # 変わったファイルだけ FTPS 1接続で exbridge.jp/health/ へ
 ```
 
-確かめ方: `php ../../kseisakuflow/scripts/render_local.php /giin/health/alt`（警告が出ないか）、
-`php -S 127.0.0.1:<18300番台の空き> ../../kseisakuflow/scripts/router_local.php` ＋ `check_width.py`（320/360/390 のはみ出し）。
+- exbridge.jp/robots.txt に `Sitemap: https://exbridge.jp/health/sitemap.xml` を登録済み（2026-11-05）。Google には kindex_sitemap_submit、Bing などには kindex_push（IndexNow）。
+- SEO: 題名は全角32字以内で、検索で使われる語を先頭に（research/kw-2026-11-05.tsv の実測）。build_site.py の SEO_TITLE・FOOD_TITLE。
+- AEO/GEO: 各ページの最初に「要点」（答えを1段落）、よくある質問（FAQPage）、Dataset（対象年度・地域）・Recipe・WebSite・Organization の構造化データ、/health/llms.txt。
+- 公開後は本番で 320/360/390 のはみ出し・simpletrack が1本・og:image が200 を確かめる。
 
 ## 出典
 

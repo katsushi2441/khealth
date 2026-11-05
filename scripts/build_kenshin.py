@@ -2,11 +2,11 @@
 """Kurage 健康トラッカー（khealth）: 特定健診・特定保健指導の実施状況（保険者別・厚生労働省）を年度ごとにつなぐ。
 
 入力: raw/hokensha/<年度>.xlsx（2018〜2024年度。2024年度は2026-10-29の訂正後のファイル）
-出力: data/health/kenshin.json（--copy で xb4g/giin/data/health/ へ写す）
+出力: data/health/kenshin.json
 
 実施率は表の値をそのまま使わず、受診者数÷対象者数・終了者数÷対象者数で計算し直す（表の値と同じになることを確かめてある）。
 「-」は公表されていない値。
-使い方: .venv/bin/python scripts/build_kenshin.py [--copy]
+使い方: .venv/bin/python scripts/build_kenshin.py
 """
 import json, os, shutil, sys, time
 import openpyxl
@@ -14,7 +14,6 @@ import openpyxl
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(ROOT, 'raw', 'hokensha')
 OUT = os.path.join(ROOT, 'data', 'health')
-XB4G = '/home/kojima/work/xb4g/giin/data/health'
 YEARS = ['2018', '2019', '2020', '2021', '2022', '2023', '2024']
 SRC = {
     '2024': 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/newpage_00082.html',
@@ -95,10 +94,6 @@ def main():
             print(f"{KIND_NAME[k]:10} 保険者 {sum(1 for e in ins.values() if e['kind'] == k and '2024' in e['years']):5}  受診率 {t[1]/t[0]:.1%}  保健指導 {t[3]/t[2]:.1%}")
     nk = [e for e in ins.values() if e['kind'] == 'kokuho' and '2024' in e['years']]
     print('市町村国保で都道府県が空:', sum(1 for e in nk if not e['pref']))
-    if '--copy' in sys.argv:
-        os.makedirs(XB4G, exist_ok=True)
-        shutil.copy(os.path.join(OUT, 'kenshin.json'), os.path.join(XB4G, 'kenshin.json'))
-        print('copied')
 
 
 if __name__ == '__main__':

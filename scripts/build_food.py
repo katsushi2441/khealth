@@ -2,19 +2,18 @@
 """Kurage 健康トラッカー（khealth）: 料理1人前の栄養を、日本食品標準成分表（八訂）増補2023年（文部科学省）から計算する。
 
 入力: raw/mext/honpyo.xlsx（第2章 本表）
-出力: data/health/food.json（--copy で xb4g/giin/data/health/ へ写す）
+出力: data/health/food.json
 
 具材と量は当社が置いた前提（料理ごとに note に書く）。市販品・店の料理の実際の栄養とは違う。
 値は「100gあたりの成分値 × 量 ÷ 100」。可食部の重さで計算する（皮・骨などの廃棄は含めない）。
 Tr（微量）は0、括弧つきの推定値はそのまま使う、「-」（未測定）は0として注記する。
-使い方: .venv/bin/python scripts/build_food.py [--copy]
+使い方: .venv/bin/python scripts/build_food.py
 """
 import json, os, re, shutil, sys, time
 import openpyxl
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'data', 'health')
-XB4G = '/home/kojima/work/xb4g/giin/data/health'
 SRC = {'title': '日本食品標準成分表（八訂）増補2023年（文部科学省）', 'url': 'https://www.mext.go.jp/a_menu/syokuhinseibun/mext_00001.html'}
 COLS = {'kcal': 6, 'protein': 9, 'fat': 12, 'carb': 16, 'fiber': 18, 'salt': 60}   # PROT- / FAT- / 差引き法による利用可能炭水化物 / FIB- / NACL_EQ
 
@@ -83,10 +82,6 @@ def main():
         print(f"{d['short']:12} {t['kcal']:6.0f}kcal たんぱく質{t['protein']:5.1f}g 脂質{t['fat']:5.1f}g 炭水化物{t['carb']:5.1f}g 食物繊維{t['fiber']:4.1f}g 食塩{t['salt']:4.1f}g 欠け{sorted(missing)}")
     os.makedirs(OUT, exist_ok=True)
     json.dump({'generated_at': time.strftime('%Y-%m-%d'), 'source': SRC, 'dishes': out}, open(os.path.join(OUT, 'food.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
-    if '--copy' in sys.argv:
-        os.makedirs(XB4G, exist_ok=True)
-        shutil.copy(os.path.join(OUT, 'food.json'), os.path.join(XB4G, 'food.json'))
-        print('copied')
 
 
 if __name__ == '__main__':

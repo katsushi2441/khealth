@@ -2,11 +2,11 @@
 """Kurage 健康トラッカー（khealth）: NDB オープンデータ（特定健診の検査値・質問票）から、話題ごとの割合を作る。
 
 入力: raw/ndb11/kensa/・raw/ndb11/monshin/（第11回 NDB オープンデータ。特定健診は2023年度分。厚生労働省）
-出力: data/health/<話題>.json と data/health/index.json（--copy で xb4g/giin/data/health/ へ写す）
+出力: data/health/<話題>.json と data/health/index.json
 
 割合 = その回答（または検査値の区分）の人数 ÷ その質問（検査）の回答者の合計。
 10未満の箇所は「‐」で伏せられているので0として数え、その集計に approx（概算）の印を付ける。回答者100人未満の集計は割合を出さない（None）。
-使い方: .venv/bin/python scripts/build_ndb.py [--copy]
+使い方: .venv/bin/python scripts/build_ndb.py
 """
 import json, os, shutil, sys, time
 import openpyxl
@@ -14,7 +14,6 @@ import openpyxl
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(ROOT, 'raw', 'ndb11')
 OUT = os.path.join(ROOT, 'data', 'health')
-XB4G = '/home/kojima/work/xb4g/giin/data/health'
 AGES = ['40～44歳', '45～49歳', '50～54歳', '55～59歳', '60～64歳', '65～69歳', '70～74歳']
 SRC_PAGE = 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000177221_00017.html'
 SRC_TITLE = '第11回NDBオープンデータ（厚生労働省）特定健診 2023年度'
@@ -190,11 +189,6 @@ def main():
     ix['topics'] = index
     ix['generated_at'] = time.strftime('%Y-%m-%d')
     json.dump(ix, open(ip, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
-    if '--copy' in sys.argv:
-        os.makedirs(XB4G, exist_ok=True)
-        for fn in os.listdir(OUT):
-            shutil.copy(os.path.join(OUT, fn), os.path.join(XB4G, fn))
-        print('copied to', XB4G)
 
 
 if __name__ == '__main__':
